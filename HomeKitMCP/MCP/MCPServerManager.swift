@@ -102,6 +102,7 @@ final class MCPServerManager: ObservableObject {
 
     private func registerToolHandlers(server: Server) async {
         let allTools = ToolDefinitions.all
+            + (homeKitManager is HomeKitAdministering ? AdminToolDefinitions.all : [])
         await server.withMethodHandler(ListTools.self) { _ in
             ListTools.Result(tools: allTools)
         }
@@ -210,6 +211,15 @@ final class MCPServerManager: ObservableObject {
                 result = try await homeKitManager.executeScene(name: name, homeName: home, id: id)
 
             default:
+                if let admin = homeKitManager as? HomeKitAdministering {
+                    var native: [String: Any] = [:]
+                    for (k, v) in args { native[k] = convertValue(v) }
+                    if let adminResult = try await admin.handleAdminTool(params.name, native) {
+                        Log.info("Admin tool [\(params.name)] args \(native)")
+                        result = adminResult
+                        break
+                    }
+                }
                 return CallTool.Result(
                     content: [.text("Unknown tool: \(params.name)")],
                     isError: true

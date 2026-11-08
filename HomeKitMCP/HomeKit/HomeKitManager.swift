@@ -3,7 +3,7 @@ import HomeKit
 
 @MainActor
 final class HomeKitManager: NSObject {
-    private var homeManager: HMHomeManager?
+    private(set) var homeManager: HMHomeManager?
     private var readyContinuation: CheckedContinuation<Void, Never>?
     private var isReady = false
 
