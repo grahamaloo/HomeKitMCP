@@ -191,12 +191,34 @@ final class HomeKitManager: NSObject {
             guard let temp = doubleValue(value) else {
                 throw HomeKitError.invalidValue("set_temperature requires a number (celsius)")
             }
-            try await setCharacteristic(accessory: accessory,
-                                        type: HMCharacteristicTypeTargetTemperature,
-                                        value: temp)
+            // Thermostats use Target Temperature, heater-coolers use the Heating Threshold.
+            let tempType = findCharacteristic(accessory: accessory, type: HMCharacteristicTypeTargetTemperature) != nil
+                ? HMCharacteristicTypeTargetTemperature
+                : HMCharacteristicTypeHeatingThreshold
+            try await setCharacteristic(accessory: accessory, type: tempType, value: temp)
         case "set_thermostat_mode":
             guard let modeStr = value as? String else {
                 throw HomeKitError.invalidValue("set_thermostat_mode requires: off, heat, cool, auto")
+            }
+            if findCharacteristic(accessory: accessory, type: HMCharacteristicTypeTargetHeatingCooling) == nil,
+               findCharacteristic(accessory: accessory, type: HMCharacteristicTypeTargetHeaterCoolerState) != nil {
+                switch modeStr.lowercased() {
+                case "off":
+                    try await setPowerState(accessory: accessory, on: false)
+                case "heat", "cool", "auto":
+                    let state: Int = switch modeStr.lowercased() {
+                    case "heat": HMCharacteristicValueTargetHeaterCoolerState.heat.rawValue
+                    case "cool": HMCharacteristicValueTargetHeaterCoolerState.cool.rawValue
+                    default: HMCharacteristicValueTargetHeaterCoolerState.automatic.rawValue
+                    }
+                    try await setPowerState(accessory: accessory, on: true)
+                    try await setCharacteristic(accessory: accessory,
+                                                type: HMCharacteristicTypeTargetHeaterCoolerState,
+                                                value: state)
+                default:
+                    throw HomeKitError.invalidValue("Unknown mode: \(modeStr). Use off/heat/cool/auto")
+                }
+                break
             }
             let mode: Int = switch modeStr.lowercased() {
             case "off": HMCharacteristicValueHeatingCooling.off.rawValue
@@ -496,6 +518,15 @@ final class HomeKitManager: NSObject {
     }
 
     private func setPowerState(accessory: HMAccessory, on: Bool) async throws {
+        // Heater-coolers (e.g. radiator thermostats) have no Power State; they use Active.
+        if findCharacteristic(accessory: accessory, type: HMCharacteristicTypePowerState) == nil,
+           findCharacteristic(accessory: accessory, type: HMCharacteristicTypeActive) != nil {
+            try await setCharacteristic(accessory: accessory,
+                                        type: HMCharacteristicTypeActive,
+                                        value: on ? HMCharacteristicValueActivationState.active.rawValue
+                                                  : HMCharacteristicValueActivationState.inactive.rawValue)
+            return
+        }
         try await setCharacteristic(accessory: accessory,
                                     type: HMCharacteristicTypePowerState,
                                     value: on)
@@ -520,6 +551,7 @@ final class HomeKitManager: NSObject {
             case HMServiceTypeOutlet: return "outlet"
             case HMServiceTypeFan: return "fan"
             case HMServiceTypeThermostat: return "thermostat"
+            case HMServiceTypeHeaterCooler: return "heater_cooler"
             case HMServiceTypeLockMechanism: return "lock"
             case HMServiceTypeGarageDoorOpener: return "garage_door"
             case HMServiceTypeTemperatureSensor: return "temperature_sensor"
@@ -557,6 +589,13 @@ final class HomeKitManager: NSObject {
         case HMCharacteristicTypeContactState: return "contactState"
         case HMCharacteristicTypeOccupancyDetected: return "occupancyDetected"
         case HMCharacteristicTypeRotationSpeed: return "fanSpeed"
+        case HMCharacteristicTypeActive: return "active"
+        case HMCharacteristicTypeCurrentHeaterCoolerState: return "currentHeaterCoolerState"
+        case HMCharacteristicTypeTargetHeaterCoolerState: return "targetHeaterCoolerState"
+        case HMCharacteristicTypeHeatingThreshold: return "heatingThresholdTemperature"
+        case HMCharacteristicTypeCoolingThreshold: return "coolingThresholdTemperature"
+        case HMCharacteristicTypeBatteryLevel: return "batteryLevel"
+        case HMCharacteristicTypeStatusLowBattery: return "lowBattery"
         case HMCharacteristicTypeName: return nil  // skip, already in top-level
         default: return nil
         }
@@ -581,6 +620,26 @@ final class HomeKitManager: NSObject {
             case HMCharacteristicValueDoorState.opening.rawValue: "opening"
             case HMCharacteristicValueDoorState.closing.rawValue: "closing"
             case HMCharacteristicValueDoorState.stopped.rawValue: "stopped"
+            default: "unknown"
+            }
+        case HMCharacteristicTypeActive:
+            guard let raw = value as? Int else { return value }
+            return raw == HMCharacteristicValueActivationState.active.rawValue ? "active" : "inactive"
+        case HMCharacteristicTypeCurrentHeaterCoolerState:
+            guard let raw = value as? Int else { return value }
+            return switch raw {
+            case HMCharacteristicValueCurrentHeaterCoolerState.inactive.rawValue: "inactive"
+            case HMCharacteristicValueCurrentHeaterCoolerState.idle.rawValue: "idle"
+            case HMCharacteristicValueCurrentHeaterCoolerState.heating.rawValue: "heating"
+            case HMCharacteristicValueCurrentHeaterCoolerState.cooling.rawValue: "cooling"
+            default: "unknown"
+            }
+        case HMCharacteristicTypeTargetHeaterCoolerState:
+            guard let raw = value as? Int else { return value }
+            return switch raw {
+            case HMCharacteristicValueTargetHeaterCoolerState.automatic.rawValue: "auto"
+            case HMCharacteristicValueTargetHeaterCoolerState.heat.rawValue: "heat"
+            case HMCharacteristicValueTargetHeaterCoolerState.cool.rawValue: "cool"
             default: "unknown"
             }
         case HMCharacteristicTypeTargetHeatingCooling, HMCharacteristicTypeCurrentHeatingCooling:
