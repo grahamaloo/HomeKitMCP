@@ -40,7 +40,7 @@ enum ToolDefinitions {
                 ]),
                 "type": .object([
                     "type": .string("string"),
-                    "description": .string("Filter by device type (light, switch, outlet, fan, thermostat, lock, garage_door, temperature_sensor, humidity_sensor, motion_sensor, contact_sensor, occupancy_sensor, window, window_covering, door)"),
+                    "description": .string("Filter by device type (light, switch, outlet, fan, thermostat, heater_cooler, lock, garage_door, temperature_sensor, humidity_sensor, motion_sensor, contact_sensor, occupancy_sensor, window, window_covering, door)"),
                 ]),
             ]),
         ])
@@ -83,7 +83,7 @@ enum ToolDefinitions {
             set_color ({hue, saturation}), \
             lock, unlock (locks), \
             open, close (garage doors), \
-            set_temperature (celsius), set_thermostat_mode (off/heat/cool/auto)
+            set_temperature (celsius; thermostats and heater-coolers such as radiator thermostats), set_thermostat_mode (off/heat/cool/auto)
             """,
         inputSchema: .object([
             "type": .string("object"),
@@ -245,7 +245,7 @@ enum ToolDefinitions {
                 ]),
                 "type": .object([
                     "type": .string("string"),
-                    "description": .string("Filter by device type (light, switch, outlet, fan, thermostat, lock, garage_door, etc.)"),
+                    "description": .string("Filter by device type (light, switch, outlet, fan, thermostat, heater_cooler, lock, garage_door, etc.)"),
                 ]),
                 "value": .object([
                     "description": .string("Value for the action, if needed"),
