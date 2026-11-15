@@ -167,6 +167,22 @@ MCP Client (Claude, etc.)
 - Make sure you have at least one home configured in the Apple Home app
 - The Mac must be signed into the same iCloud account as your Home setup
 
+**Server hangs at "waiting for homes to load" / no homes found when started by the MCP client:**
+
+On some macOS versions (observed on macOS 27.2) HomeKit never reports any homes when the app binary is spawned directly as a child process of the MCP client, even though the same app works when opened normally. Launching it through LaunchServices fixes this. Use the wrapper script instead of the binary:
+
+```json
+{
+  "mcpServers": {
+    "homekit": {
+      "command": "/path/to/HomeKitMCP/scripts/homekit-mcp.sh"
+    }
+  }
+}
+```
+
+The script starts the app with `open` and connects its stdin/stdout through named pipes. By default it expects the app at `~/Applications/HomeKitMCP.app`; set `HOMEKIT_MCP_APP` to use another path.
+
 **Build fails with signing errors:**
 - Make sure you've created `Local.xcconfig` from the template and set your Team ID
 - Alternatively, select a team manually in Xcode under Signing & Capabilities
