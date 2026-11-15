@@ -5,14 +5,15 @@ import Testing
 struct ToolDefinitionsTests {
 
     @Test func allToolsCount() {
-        #expect(ToolDefinitions.all.count == 7)
+        #expect(ToolDefinitions.all.count == 10)
     }
 
     @Test func toolNamesAreCorrect() {
         let names = ToolDefinitions.all.map(\.name)
         #expect(names == [
             "list_homes", "list_rooms", "list_devices", "get_device_state", "control_device",
-            "batch_control_devices", "control_devices_by_filter",
+            "batch_control_devices", "batch_get_device_state", "control_devices_by_filter",
+            "list_scenes", "execute_scene",
         ])
     }
 
