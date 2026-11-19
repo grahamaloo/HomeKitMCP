@@ -9,3 +9,10 @@
 // Or at https://developer.apple.com/account → Membership Details
 
 DEVELOPMENT_TEAM = YOUR_TEAM_ID_HERE
+
+// Reverse-DNS prefix for the bundle IDs of all three targets
+// (<prefix>.HomeKitMCP, <prefix>.StatusBarPlugin, <prefix>.HomeKitMCPTests).
+// It must be one your team can register. HomeKit cannot use a wildcard
+// App ID, so register <prefix>.HomeKitMCP as an explicit App ID with the
+// HomeKit capability at https://developer.apple.com/account/resources/identifiers/list
+BUNDLE_ID_PREFIX = com.example

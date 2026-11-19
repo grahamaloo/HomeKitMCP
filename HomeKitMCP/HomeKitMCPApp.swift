@@ -7,7 +7,7 @@
 
 import SwiftUI
 
-@main
+// Entry point is main.swift (ResponsibilityRelaunch runs first).
 struct HomeKitMCPApp: App {
     @StateObject private var serverManager = MCPServerManager(startServer: false)
     @Environment(\.scenePhase) private var scenePhase

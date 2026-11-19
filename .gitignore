@@ -1,2 +1,6 @@
 xcuserdata/
 Local.xcconfig
+# README "Installing" builds here (-derivedDataPath build)
+/build/
+# LLVM coverage output from running the app binary directly
+default.profraw
