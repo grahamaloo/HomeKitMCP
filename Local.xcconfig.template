@@ -15,4 +15,5 @@ DEVELOPMENT_TEAM = YOUR_TEAM_ID_HERE
 // It must be one your team can register. HomeKit cannot use a wildcard
 // App ID, so register <prefix>.HomeKitMCP as an explicit App ID with the
 // HomeKit capability at https://developer.apple.com/account/resources/identifiers/list
+// If this is unset, the prefix defaults to "grahamaloo" (the original IDs).
 BUNDLE_ID_PREFIX = com.example
